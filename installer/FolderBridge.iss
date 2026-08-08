@@ -2,7 +2,7 @@
 
 #define MyAppName "FolderBridge"
 #ifndef MyAppVersion
-#define MyAppVersion "0.1.0b1"
+#define MyAppVersion "0.1.0b2"
 #endif
 #define MyAppPublisher "Granik115"
 #define MyAppURL "https://github.com/Granik115/FolderBridge"
@@ -29,6 +29,7 @@ CloseApplications=yes
 RestartApplications=no
 MinVersion=10.0
 UninstallDisplayIcon={app}\{#MyAppExeName}
+SetupIconFile=..\src\folderbridge\resources\folderbridge.ico
 
 [Languages]
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
@@ -48,4 +49,3 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
-

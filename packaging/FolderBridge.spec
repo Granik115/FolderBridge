@@ -3,6 +3,7 @@ from pathlib import Path
 from PyInstaller.utils.hooks import collect_submodules
 
 root = Path.cwd().resolve()
+icon_file = root / "src" / "folderbridge" / "resources" / "folderbridge.ico"
 
 hidden = (
     collect_submodules("googleapiclient")
@@ -14,7 +15,10 @@ a = Analysis(
     [str(root / "src" / "folderbridge" / "__main__.py")],
     pathex=[str(root / "src")],
     binaries=[],
-    datas=[(str(root / "README.md"), ".")],
+    datas=[
+        (str(root / "README.md"), "."),
+        (str(icon_file), "folderbridge/resources"),
+    ],
     hiddenimports=hidden,
     hookspath=[],
     hooksconfig={},
@@ -34,6 +38,6 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,
+    icon=str(icon_file),
 )
 coll = COLLECT(a.binaries, a.datas, exe, name="FolderBridge")
-

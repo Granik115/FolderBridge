@@ -100,17 +100,23 @@ class TaskDialog(QDialog):
         form.addRow("", remote_hint)
 
         self.direction_combo = QComboBox()
-        self.direction_combo.addItem(Direction.UPLOAD.label, Direction.UPLOAD)
-        self.direction_combo.addItem(Direction.DOWNLOAD.label, Direction.DOWNLOAD)
+        # Keep only plain strings in Qt item data.  PySide on Windows may unwrap a
+        # ``str, Enum`` instance to ``str`` while crossing the QVariant boundary.
+        self.direction_combo.addItem(Direction.UPLOAD.label, Direction.UPLOAD.value)
+        self.direction_combo.addItem(Direction.DOWNLOAD.label, Direction.DOWNLOAD.value)
         direction = job.direction if job else Direction.UPLOAD
-        self.direction_combo.setCurrentIndex(0 if direction is Direction.UPLOAD else 1)
+        self.direction_combo.setCurrentIndex(
+            self.direction_combo.findData(Direction(direction).value)
+        )
         form.addRow("Направление", self.direction_combo)
 
         self.mode_combo = QComboBox()
-        self.mode_combo.addItem(SyncMode.COPY.label + " (без удалений)", SyncMode.COPY)
-        self.mode_combo.addItem(SyncMode.MIRROR.label + " (лишнее убирается)", SyncMode.MIRROR)
+        self.mode_combo.addItem(SyncMode.COPY.label + " (без удалений)", SyncMode.COPY.value)
+        self.mode_combo.addItem(
+            SyncMode.MIRROR.label + " (лишнее убирается)", SyncMode.MIRROR.value
+        )
         mode = job.mode if job else SyncMode.COPY
-        self.mode_combo.setCurrentIndex(0 if mode is SyncMode.COPY else 1)
+        self.mode_combo.setCurrentIndex(self.mode_combo.findData(SyncMode(mode).value))
         self.mode_combo.currentIndexChanged.connect(self._update_warning)
         form.addRow("Режим", self.mode_combo)
 
@@ -150,7 +156,7 @@ class TaskDialog(QDialog):
             self.local_edit.setText(chosen)
 
     def _update_warning(self) -> None:
-        if self.mode_combo.currentData() is SyncMode.MIRROR:
+        if SyncMode(self.mode_combo.currentData()) is SyncMode.MIRROR:
             self.warning.setText(
                 "⚠ Зеркало: лишние файлы на Drive попадут в корзину, лишние локальные — "
                 "в карантин FolderBridge. Для первого теста рекомендуется «Копирование»."
@@ -167,8 +173,8 @@ class TaskDialog(QDialog):
             name=self.name_edit.text().strip(),
             local_path=self.local_edit.text().strip(),
             remote_path=normalize_remote_path(self.remote_edit.text()),
-            direction=self.direction_combo.currentData(),
-            mode=self.mode_combo.currentData(),
+            direction=Direction(self.direction_combo.currentData()),
+            mode=SyncMode(self.mode_combo.currentData()),
             interval_s=self.interval_spin.value(),
             enabled=self.enabled_check.isChecked(),
             last_run_at=self.original.last_run_at if self.original else None,
@@ -379,7 +385,9 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(f"FolderBridge {__version__} — PC ↔ Google Drive")
         self.resize(1180, 760)
-        icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_DriveHDIcon)
+        icon = QApplication.windowIcon()
+        if icon.isNull():
+            icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_DriveHDIcon)
         self.setWindowIcon(icon)
 
         root = QWidget()

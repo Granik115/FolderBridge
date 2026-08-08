@@ -7,10 +7,11 @@ import sys
 import traceback
 
 from PySide6.QtCore import QLockFile
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
 from folderbridge import __version__
-from folderbridge.paths import app_data_dir, database_path, quarantine_dir
+from folderbridge.paths import app_data_dir, database_path, icon_path, quarantine_dir
 from folderbridge.scheduler import SyncScheduler
 from folderbridge.storage import StateStore
 from folderbridge.sync_engine import SyncEngine
@@ -32,6 +33,9 @@ def main() -> int:
     app.setApplicationVersion(__version__)
     app.setStyle("Fusion")
     app.setStyleSheet(stylesheet())
+    icon = QIcon(str(icon_path()))
+    if not icon.isNull():
+        app.setWindowIcon(icon)
 
     instance_lock = QLockFile(str(app_data_dir() / "FolderBridge.lock"))
     instance_lock.setStaleLockTime(5000)

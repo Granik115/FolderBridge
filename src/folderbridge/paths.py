@@ -30,6 +30,11 @@ def quarantine_dir() -> Path:
     return path
 
 
+def icon_path() -> Path:
+    """Return the application icon in both source and PyInstaller builds."""
+    return Path(__file__).resolve().parent / "resources" / "folderbridge.ico"
+
+
 def project_root() -> Path | None:
     """Return a source checkout root when running from an editable clone."""
     current = Path(__file__).resolve()
@@ -37,4 +42,3 @@ def project_root() -> Path | None:
         if (parent / "pyproject.toml").is_file() and (parent / ".git").exists():
             return parent
     return None
-

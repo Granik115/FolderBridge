@@ -2,7 +2,7 @@
 
 #define MyAppName "FolderBridge"
 #ifndef MyAppVersion
-#define MyAppVersion "0.1.0b2"
+#define MyAppVersion "0.1.0"
 #endif
 #define MyAppPublisher "Granik115"
 #define MyAppURL "https://github.com/Granik115/FolderBridge"

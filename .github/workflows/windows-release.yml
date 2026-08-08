@@ -1,4 +1,4 @@
-name: Build and publish Windows prerelease
+name: Build and publish Windows release
 
 on:
   push:
@@ -32,6 +32,8 @@ jobs:
           if (-not $match) { throw "Project version not found" }
           $version = $match.Matches[0].Groups[1].Value
           "VERSION=$version" >> $env:GITHUB_ENV
+          $isPrerelease = $version -match '(?i)(?:a|b|rc|dev)\d*'
+          "IS_PRERELEASE=$($isPrerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_ENV
 
       - name: Install dependencies
         shell: pwsh
@@ -66,7 +68,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish GitHub prerelease
+      - name: Publish GitHub release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -79,8 +81,9 @@ jobs:
             "releases/SHA256SUMS.txt"
           )
           $notes = @"
-          FolderBridge $env:VERSION — второй домашний пререлиз.
+          FolderBridge $env:VERSION — первый стабильный релиз.
 
+          Код синхронизации соответствует проверенному пререлизу 0.1.0b2; функциональных изменений относительно него нет.
           - Исправлено создание заданий в Windows: значения направления и режима теперь надёжно преобразуются из Qt в типы движка перед сохранением в SQLite.
           - Добавлена собственная иконка FolderBridge для окна, системного трея, EXE и установщика.
           - Добавлен регрессионный UI-тест `QComboBox → SyncJob → SQLite` для обоих направлений и обоих режимов.
@@ -90,16 +93,22 @@ jobs:
           - Встроенный менеджер версий с обновлением, переустановкой и откатом.
           - Установщик и portable ZIP; запуск из Git clone поддерживается отдельно.
 
-          Это домашняя beta до подключения к FOCTwin. Сборка не подписана цифровой подписью, поэтому Windows SmartScreen может показать предупреждение.
+          Сборка не подписана цифровой подписью, поэтому Windows SmartScreen может показать предупреждение.
           "@
           if (gh release view $tag --repo "${{ github.repository }}" 2>$null) {
             gh release upload $tag $assets --clobber --repo "${{ github.repository }}"
-            gh release edit $tag --notes $notes --prerelease --repo "${{ github.repository }}"
+            gh release edit $tag --notes $notes --repo "${{ github.repository }}"
           } else {
-            gh release create $tag $assets `
-              --target "${{ github.sha }}" `
-              --title "FolderBridge $env:VERSION" `
-              --notes $notes `
-              --prerelease `
-              --repo "${{ github.repository }}"
+            $releaseArgs = @(
+              "release", "create", $tag
+            ) + $assets + @(
+              "--target", "${{ github.sha }}",
+              "--title", "FolderBridge $env:VERSION",
+              "--notes", $notes,
+              "--repo", "${{ github.repository }}"
+            )
+            if ($env:IS_PRERELEASE -eq "true") {
+              $releaseArgs += "--prerelease"
+            }
+            & gh @releaseArgs
           }
